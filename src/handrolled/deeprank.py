@@ -30,6 +30,9 @@ CRED_PATH = os.environ.get("DSH_KB_DEEP_CREDENTIALS") or ""
 LAST_RAW = ""
 LAST_ERROR = ""
 LOG_PATH = os.environ.get("DSH_KB_DEEP_LOG") or ""
+#: Which key to read out of the credentials file.  Never a vendor name in code:
+#: the host decides what its own secrets are called.
+KEY_NAME = os.environ.get("DSH_KB_DEEP_KEY_NAME") or "DEEP_API_KEY"
 
 PROMPT = """用户问题：%s
 
@@ -43,9 +46,12 @@ def _api_key() -> str | None:
     """API key: ``DSH_KB_DEEP_API_KEY`` first, then an optional credentials file.
 
     The file is whatever ``DSH_KB_DEEP_CREDENTIALS`` points at and only has to
-    contain ``DEEP_API_KEY`` (top level or under ``refs``).  YAML is used when
-    PyYAML happens to be importable, otherwise one line is matched with a regex —
-    the MCP server interpreter may not have yaml installed.
+    contain one key (top level or under ``refs``).  Its name defaults to
+    ``DEEP_API_KEY`` and can be changed with ``DSH_KB_DEEP_KEY_NAME`` — a host
+    that already keeps its key under another name (a shared credentials file for
+    several services, say) should not have to copy the secret just to be read.
+    YAML is used when PyYAML happens to be importable, otherwise one line is
+    matched with a regex — the MCP server interpreter may not have yaml installed.
     """
     global LAST_ERROR
     key = (os.environ.get("DSH_KB_DEEP_API_KEY") or "").strip()
@@ -64,12 +70,12 @@ def _api_key() -> str | None:
 
         data = yaml.safe_load(raw) or {}
         refs = data.get("refs") or data
-        value = refs.get("DEEP_API_KEY")
+        value = refs.get(KEY_NAME)
         if value:
             return str(value)
     except Exception:
         pass
-    m = re.search(r"^\s*DEEP_API_KEY\s*:\s*(\S+)", raw, re.M)
+    m = re.search(r"^\s*" + re.escape(KEY_NAME) + r"\s*:\s*(\S+)", raw, re.M)
     if m:
         return m.group(1).strip().strip(chr(34)).strip(chr(39))
     LAST_ERROR = "no-key"
