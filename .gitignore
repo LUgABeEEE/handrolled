@@ -1,0 +1,29 @@
+# State and local artifacts — never commit these.
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+state/
+logs/
+
+# Scratch copies and experiments (never commit the previous version of a file).
+*.bak-*
+*.bak
+*.experimental-*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
